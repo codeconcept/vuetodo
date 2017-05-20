@@ -31,11 +31,15 @@
                 </div>
 
                 <div class="modal-footer">
-                    <slot name="footer">
-                    default footer
-                    <button class="modal-default-button" @click="$emit('close')">
-                        OK
-                    </button>
+                    <slot name="footer">                    
+                        <button class="modal-default-button" @click="$emit('deletetask')">
+                            supprimer
+                        </button>
+                        &nbsp;
+                        <button class="modal-default-button" @click="$emit('closemodal')">
+                            annuler
+                        </button>
+                        <br>
                     </slot>
                 </div>
                 </div>
@@ -46,13 +50,13 @@
 
     <!-- app -->
     <div id="app">     
-          <button id="show-modal" @click="showModal = true">Show Modal</button>
           <!-- use the modal component, pass in the prop -->
-          <modal v-if="showModal" @close="showModal = false">
+          <modal v-if="showModal" v-on:closemodal="cancelTaskDeletion" v-on:deletetask="confirmDelete">
             <!--
             you can use custom content here to overwrite
             default content
             -->
+            <div slot="body">La tâche {{taskToDelete.description}} va être supprimée</div>
             <h3 slot="header">Voulez vous supprimer cette tâche ?</h3>
           </modal>
 
@@ -72,7 +76,11 @@
                     <span v-if="!task.isInEditMode">
                         <i class="fa fa-edit" v-on:click="switchMode(task)"></i>
                         {{task.description}}
-                        <i class="fa fa-trash-o" v-on:click="deleteTask(task)"></i>
+                        <i class="fa fa-trash-o" 
+                            v-on:click="deleteTask(task)" 
+                            v-on:delete="confirmDelete(task)"
+                            v-on:cancel="cancelTaskDeletion"
+                            ></i>
                     </span>
 
                     <span v-else>                        
@@ -98,7 +106,8 @@
                 title: 'A faire',
                 task: null,
                 tasks: [],
-                showModal: false
+                showModal: false,
+                taskToDelete: null
             },
             methods: {
                 addTask() {
@@ -111,7 +120,18 @@
                     console.log('task.isInEditMode ', task.isInEditMode);
                 },
                 deleteTask(task) {
-                    this.tasks = this.tasks.filter(t => t.id !== task.id);
+                    this.showModal = true;
+                    this.taskToDelete = task;
+                },
+                confirmDelete() {
+                    console.log('confirmed deletion');
+                    this.tasks = this.tasks.filter(t => t.id !== this.taskToDelete.id);
+                    this.showModal = false;     
+                    this.taskToDelete = null;          
+                },
+                cancelTaskDeletion() {
+                    this.showModal = false;
+                    this.taskToDelete = null;                              
                 }
             }
         });
